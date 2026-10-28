@@ -99,3 +99,10 @@ test('remote addition refreshes a dirty folder without losing draft, focus or ca
   await expect(page.locator('#documentsView [data-open-doc="remote"]')).toBeVisible({timeout:10000});await expect(page.locator('#docContent')).toHaveValue('# 我正在写');await expect(page.locator('#docContent')).toBeFocused();
   expect(await page.locator('#docContent').evaluate(el=>el.selectionStart)).toBe(3);
 });
+
+test('search filters current folder without losing an edited draft',async({page})=>{
+ await page.locator('[data-view="documents"]').click();await page.locator('#docContent').fill('草稿内容');
+ const search=page.getByRole('searchbox',{name:'搜索当前文件夹文档'});await search.fill('不存在');
+ await expect(page.getByText('没有匹配的文档')).toBeVisible();await expect(page.locator('#docContent')).toHaveValue('草稿内容');await expect(search).toBeFocused();
+ await search.fill('执行计划');await expect(page.locator('[data-open-doc="global"]')).toBeVisible();
+});

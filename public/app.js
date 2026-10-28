@@ -210,6 +210,8 @@ function renderInspector() {
   // criteria array contains local edits. Normalize only vanished links in
   // both snapshots, so this remote cleanup isn't a false overwrite conflict.
   const documentIds = new Set(state.project.documents.map(d=>d.id));
+  const missingLinks = state.taskDirty && (state.taskDraft.documentIds.some(id=>!documentIds.has(id)) || state.taskDraft.criteria.some(c => (c.documentId && !documentIds.has(c.documentId)) || (c.acceptanceDocumentId && !(state.project.acceptanceDocuments ?? []).some(d=>d.id===c.acceptanceDocumentId && d.taskId===task.id && !d.archived))));
+  if (missingLinks) state.missingDocumentLinks = true;
   for (const snapshot of [state.taskDraft, state.taskBase]) {
     snapshot.documentIds = snapshot.documentIds.filter(id=>documentIds.has(id));
     for (const criterion of snapshot.criteria) {
@@ -217,8 +219,9 @@ function renderInspector() {
       if (criterion.acceptanceDocumentId && !(state.project.acceptanceDocuments ?? []).some(d=>d.id===criterion.acceptanceDocumentId && d.taskId===task.id && !d.archived)) criterion.acceptanceDocumentId = null;
     }
   }
+  if (!state.taskDirty) state.missingDocumentLinks = false;
   const draft = state.taskDraft, { blockers, predecessors } = readiness(task), passed = draft.criteria.filter(c => c.result === 'passed').length;
-  $('inspector').innerHTML = `<div class="inspector-heading"><span class="eyebrow">STAGE DETAILS / 阶段详情</span><button class="icon-button" data-action="close" aria-label="关闭任务详情">${icon('close')}</button></div>
+  $('inspector').innerHTML = `${state.missingDocumentLinks ? '<p role="status" class="subtle">关联文档已被删除，失效关联已移除；请检查草稿后保存。</p>' : ''}<div class="inspector-heading"><span class="eyebrow">STAGE DETAILS / 阶段详情</span><button class="icon-button" data-action="close" aria-label="关闭任务详情">${icon('close')}</button></div>
     <div class="inspector-body"><div class="task-id mono">${esc(task.id)}</div><label class="field"><span>阶段名称</span><input name="title" value="${esc(draft.title)}" maxlength="160" required></label><div class="field-row"><label class="field"><span>任务状态</span><select name="status">${Object.entries(statusInfo).map(([key,value])=>`<option value="${key}" ${draft.status===key?'selected':''}>${value[0]}</option>`).join('')}</select></label><label class="field"><span>负责人</span><input name="owner" value="${esc(draft.owner)}" maxlength="120" placeholder="YOU / AGENT"></label></div>
     <label class="field"><span>目标与说明 / 阻塞原因</span><textarea name="description" rows="3" maxlength="10000" placeholder="这个阶段要达成什么？">${esc(draft.description)}</textarea></label>
     <div class="readiness-note ${!blockers.length && task.status!=='blocked'?'ready':''}">${task.status==='blocked'?'此阶段被手动标记为阻塞，请记录原因。':blockers.length?`前置未完成：${blockers.map(t=>esc(t.title)).join('、')}`:task.status==='done'?'阶段已完成，验收证据已保留。':'前置条件已满足，可以推进这个阶段。'}</div>
@@ -267,8 +270,11 @@ async function openDocumentFolder(taskId = null, docId = null, returnTaskId = nu
 }
 function renderDocuments() {
   const focused = document.activeElement;
-  const caret = $('documentsView').contains(focused) && ['docTitle','docContent','docType'].includes(focused.id)
+  const caret = $('documentsView').contains(focused) && ['docTitle','docContent','docType','documentSearch'].includes(focused.id)
     ? {id:focused.id,start:focused.selectionStart,end:focused.selectionEnd,scroll:focused.scrollTop} : null;
+  const searchContext = `${state.project.id}:${state.docCollection}:${state.docTaskId ?? ''}`;
+  const searchValue = $('documentsView').dataset.searchContext === searchContext ? ($('documentSearch')?.value ?? '') : '';
+  $('documentsView').dataset.searchContext = searchContext;
   const saved = documentRecords().find(d=>d.id===state.docDraft?.id);
   if (state.docCollection !== 'ordinary' && saved?.archived) state.docCollection = 'acceptance-archive';
   if (state.docCollection === 'ordinary' && state.docTaskId && !state.project.tasks.some(t=>t.id===state.docTaskId)) state.docTaskId = null;
@@ -287,6 +293,7 @@ function renderDocuments() {
   $('documentsView').innerHTML = state.docCollection === 'ordinary'
     ? renderDocumentView({project:state.project,taskId:state.docTaskId,draft:state.docDraft,mode:state.docMode})
     : renderAcceptanceView({project:state.project,taskId:state.docTaskId,draft:state.docDraft,mode:state.docMode,archived:state.docCollection==='acceptance-archive'});
+  if ($('documentSearch') && searchValue) { $('documentSearch').value = searchValue; $('documentSearch').dispatchEvent(new Event('input', {bubbles:true})); }
   if (caret) {
     const field = $(caret.id);
     if (field && !field.hidden) { field.focus({preventScroll:true}); if (typeof caret.start === 'number') field.setSelectionRange(caret.start,caret.end); field.scrollTop = caret.scroll; }
@@ -581,6 +588,13 @@ $('documentsView').addEventListener('change', event => {
   }
 });
 $('documentsView').addEventListener('input', event => {
+  if (event.target.id === 'documentSearch') {
+    const query = event.target.value.trim().toLocaleLowerCase();
+    const items = [...$('documentsView').querySelectorAll('.doc-list-item')];
+    for (const item of items) item.hidden = !item.textContent.toLocaleLowerCase().includes(query);
+    $('documentSearchEmpty').hidden = !query || items.some(item=>!item.hidden);
+    return;
+  }
   if (!state.docDraft) return;
   const fields = { docTitle: 'title', docType: 'type', docContent: 'content' };
   if (fields[event.target.id]) { state.docDraft[fields[event.target.id]] = event.target.value; state.docDirty = true; syncLabel(); if (event.target.id === 'docContent') $('docPreview').innerHTML = renderMarkdown(state.docDraft.content); }

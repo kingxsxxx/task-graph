@@ -29,7 +29,7 @@ test('legacy conversion is explicit, preserves originals and offers a safe cance
 test('remote deletion cleans shared references while retaining dirty acceptance evidence',async({page})=>{
   await create(page);let p=await snapshot(page);await command(page,{type:'updateTask',id:'a',patch:{criteria:[...p.tasks[0].criteria,{id:'second',text:'另一个条件',result:'pending',evidence:'',acceptanceDocumentId:'acceptance-a'}]}});
   await page.reload();await page.locator('[data-task="a"]').click();await page.getByLabel('第 1 项验收证据',{exact:true}).fill('本地证据');await command(page,{type:'deleteAcceptanceDocument',id:'acceptance-a'});await page.locator('#syncState').click();
-  await expect(page.getByLabel('第 1 项验收文档',{exact:true})).toHaveValue('');await save(page);p=await snapshot(page);expect(p.tasks[0].criteria.map(c=>c.acceptanceDocumentId)).toEqual([null,null]);expect(p.tasks[0].criteria[0].evidence).toBe('本地证据');
+  await expect(page.getByLabel('第 1 项验收文档',{exact:true})).toHaveValue('');await expect(page.locator('#inspector')).toContainText('关联文档已被删除');await save(page);p=await snapshot(page);expect(p.tasks[0].criteria.map(c=>c.acceptanceDocumentId)).toEqual([null,null]);expect(p.tasks[0].criteria[0].evidence).toBe('本地证据');
 });
 test('dirty acceptance document survives mode changes, creation cancellation and remote edits',async({page})=>{
   await create(page);await page.reload();await page.locator('[data-task="a"]').click();await page.getByRole('button',{name:'打开验收文档 a 验收记录',exact:true}).click();await page.locator('#docContent').fill('# 本地草稿');
