@@ -1,0 +1,21 @@
+# SDD ledger — plan: docs/superpowers/plans/2026-09-30-node-acceptance-documents.md
+
+Spec: docs/superpowers/specs/2026-09-30-node-acceptance-documents-design.md (approved).
+Execution: inline, user explicitly requested direct execution plus clearer Chinese font and higher-contrast status legend.
+Task 1: complete — six new tests RED (unknown command/missing restriction)→GREEN; npm test 38/38. Dedicated commands, legacy preservation/conversion, archive and limits implemented. Existing persistence regression uses dedicated acceptance reference.
+Task 2: complete — missing path metadata tests RED→GREEN; npm test 42/42. Separate real files, archive directories, legacy readonly lookup, single-HEAD race and failed/stale conversion preservation verified.
+Task 3: complete — isolated render module RED (missing module)→GREEN; npm test 43/43. Scope isolation, escaped titles, readonly archive, collection switch and template verified. Old renderer is removed when app switches imports in Task 4.
+Task 4: complete — dedicated browser workflows, restore/copy guards, real HTTP 409, narrow-screen palettes and visual contrast tests implemented. Remote-deletion fixture typo and refresh assertion race were test-only corrections. Final full regression in progress.
+Task 5: complete — README/AGENT_GUIDE/spec/plan/progress updated; independent review Important finding reproduced and fixed. Final npm test 44/44, full Chromium 43/43, syntax checks exit 0. Live server restarted and readonly smoke verified 10 nodes, acceptance creation entry, /acceptance.js 200, source path 404 and zero JavaScript errors. All three project revisions (58/26/1) and SHA-256 hashes equal before/after restart; no production writes or automatic conversion.
+Pre-flight: Tasks 1→2: acceptanceDocuments and archive flag consumed by storage; consistent.
+Pre-flight: Tasks 1/3→4: dedicated commands, acceptanceDocumentId and collection selector consumed by app; consistent.
+Pre-flight: Tasks 2/4→5: dedicated paths and UI covered by docs and final regression; consistent.
+Ruling: Use durable docs ledger instead of Git-based scratch/commit helpers — this project is not a Git repository and the approved plan prohibits initializing one — no commit-based rollback; existing versioned project data is unaffected.
+Visual addition: prefer Windows Microsoft YaHei / macOS PingFang SC with bundled Noto Sans SC fallback; increase legend weight, size and status contrast in both palettes. Assess graph transform scaling separately; do not promise identical raster sharpness on every device.
+
+Independent review: acceptance_final_review inspected implementation read-only and verified 43 unit tests. No Critical findings; one Important owner-replacement bug reproduced in isolated Chromium. Fix pass: server-generated immutable task.instanceId distinguishes recreated nodes; client records owner identity when opening acceptance folder and rejects restoration into replacement owner. New browser test observed RED (remained active collection) before fix; new domain test observed RED (identity absent), then npm test 44/44 GREEN. Actual acceptance editor HTTP 409 regression added per review recommendation.
+Declined-to-judge ruling: native Windows/macOS font rasterization cannot be verified in this Linux browser — accept limitation; only native font priority, rendered size, measured contrast and Linux browser layout are verified. No claim of universal glyph sharpness.
+
+Final fix verification: replacement-owner browser regression GREEN; actual acceptance HTTP 409 GREEN; full suites 44 unit/API and 43 browser tests passed with exit 0. No unresolved Critical/Important findings. Review was not duplicated. Readonly screenshots include mobile dark/light and live light legend at enlarged graph zoom.
+Ruling: additive server-generated task.instanceId and local owner identity are required for same-ID recreation isolation — taskId existence alone failed independently reproduced requirements — adds an optional task field; legacy reads remain unchanged, no migration writes.
+Ruling: retain source and durable ledger without branch menu/workspace cleanup — no Git repository or skill-owned temporary worktree exists — no commit rollback or PR is offered.

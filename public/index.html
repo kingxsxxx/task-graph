@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1116">
+  <title>Task Graph · 长程任务工作台</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script src="/theme.js"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/refinement.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+<svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+  <symbol id="i-graph" viewBox="0 0 24 24"><rect x="3" y="9" width="5" height="6" rx="1.5"/><rect x="16" y="3" width="5" height="6" rx="1.5"/><rect x="16" y="15" width="5" height="6" rx="1.5"/><path d="M8 12h4V6h4M12 12v6h4"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="m9 15 6-6m-7 3-3 3a4 4 0 0 0 6 6l3-3m-2-6 3-3a4 4 0 0 1 6 6l-3 3"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><rect x="8" y="8" width="8" height="8" rx="1"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="4" width="6" height="16" rx="1"/><rect x="13" y="4" width="8" height="6" rx="1"/><rect x="13" y="14" width="8" height="6" rx="1"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z"/></symbol>
+  <symbol id="i-block" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+</defs></svg>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="/" aria-label="Task Graph 首页"><span class="brand-mark"><svg><use href="#i-graph"/></svg></span><span>task<span class="brand-light">graph</span></span></a>
+    <nav class="main-nav" aria-label="工作空间导航">
+      <button class="nav-item active" data-view="graph"><svg><use href="#i-graph"/></svg>任务图谱<span class="nav-count" id="navTaskCount">0</span></button>
+      <div class="nav-document-row"><button class="nav-item" data-view="documents"><svg><use href="#i-doc"/></svg>项目文档<span class="nav-count" id="navDocCount">0</span></button><button id="newDocSide" class="icon-button" title="新建文档" aria-label="新建文档"><svg><use href="#i-plus"/></svg></button></div>
+      <button class="nav-item" data-view="activity"><svg><use href="#i-clock"/></svg>活动记录</button>
+    </nav>
+    <div class="side-section-title"><button id="projectToggle" aria-expanded="true" aria-controls="projectList">我的项目<svg aria-hidden="true"><use href="#i-chevron"/></svg></button><button id="newProject" class="icon-button" title="新建项目" aria-label="新建项目"><svg><use href="#i-plus"/></svg></button></div>
+    <div id="projectList" class="project-list"></div>
+  </aside>
+  <main class="main-shell">
+    <header class="topbar"><div class="breadcrumbs"><button id="menuToggle" class="icon-button mobile-menu" aria-label="展开导航"><svg><use href="#i-menu"/></svg></button><span id="viewLabel">任务图谱</span></div><div class="topbar-right"><select id="themeToggle" aria-label="选择配色主题"><option value="dark">经典深色</option><option value="light">经典浅色</option><option value="mint">薄荷浅色</option><option value="ocean">深海青绿</option></select><button class="sync-state" id="syncState" title="读取最新项目版本"><span class="dot green"></span>已同步</button></div></header>
+    <div class="page-content">
+      <section class="hero"><h1 id="crumbName">正在载入</h1><div class="hero-actions"><button class="button ghost" id="importProject"><svg><use href="#i-upload"/></svg><span>导入</span></button><button class="button ghost" id="exportProject"><svg><use href="#i-download"/></svg><span>导出</span></button></div></section>
+      <section class="stats-grid" id="stats" aria-label="项目统计"></section>
+      <section class="workspace" id="workspace">
+        <div class="graph-panel" id="graphPanel">
+          <div class="panel-heading"><div class="panel-title"><svg><use href="#i-graph"/></svg><h2>任务拓扑</h2><span class="subtle" id="edgeCount">0 条依赖</span></div></div>
+          <div class="graph-toolbar"><label class="search-box"><svg><use href="#i-search"/></svg><input id="search" placeholder="搜索阶段、负责人…" aria-label="搜索任务"></label><select id="statusFilter" aria-label="按状态筛选"><option value="all">全部状态</option><option value="backlog">待开始</option><option value="active">进行中</option><option value="review">待验收</option><option value="done">已完成</option><option value="blocked">阻塞</option></select><div class="toolbar-divider"></div><div class="graph-actions"><button class="button small primary" id="newTask" aria-label="新建阶段" title="新建阶段"><svg><use href="#i-plus"/></svg><span>新建阶段</span></button><button class="button small ghost" id="connectTasks" aria-label="连接" title="连接"><svg><use href="#i-link"/></svg><span>连接</span></button><button class="button small ghost" id="autoLayout" aria-label="整理" title="整理"><svg><use href="#i-layout"/></svg><span>整理</span></button></div></div>
+          <div class="graph-canvas" id="canvas" tabindex="0" aria-label="任务依赖画布，方向键平移，加减键缩放，F 适应画布">
+            <div class="graph-world" id="world"><svg id="edges" class="edges" aria-hidden="true"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10Z" fill="context-stroke"/></marker></defs><g id="edgePaths"></g></svg><div id="nodes"></div></div>
+            <div id="emptyGraph" class="empty-state" hidden><span class="empty-graphic"><svg><use href="#i-graph"/></svg></span><h3>每个大目标，都从一个阶段开始</h3><p>创建任务，写下验收标准，再连起它们之间的依赖。</p><button class="button primary" id="emptyNewTask">创建第一阶段<svg><use href="#i-arrow"/></svg></button></div>
+            <div class="canvas-controls"><button id="zoomOut" aria-label="缩小">−</button><span id="zoomValue" class="mono">100%</span><button id="zoomIn" aria-label="放大">+</button><span class="control-divider"></span><button id="fitGraph" aria-label="适应画布" title="适应画布 (F)"><svg><use href="#i-fit"/></svg></button></div>
+            <button class="minimap" id="minimap" title="点击适应画布" aria-label="任务图总览，点击适应画布"></button>
+          </div>
+          <footer class="graph-footer"><div class="legend"><span><i class="dot gray"></i>待开始</span><span><i class="dot green"></i>进行中</span><span><i class="dot amber"></i>待验收</span><span><i class="dot blue"></i>已完成</span><span><i class="dot red"></i>阻塞</span></div><span class="subtle" id="visibleCount">所有阶段</span></footer>
+        </div>
+        <aside class="inspector" id="inspector" hidden aria-label="任务详情"></aside>
+      </section>
+      <section id="documentsView" class="documents-view" hidden></section>
+      <section id="activityView" class="activity-view" hidden></section>
+      <footer class="page-footer"><span class="mono" id="revisionLabel">REV —</span></footer>
+    </div>
+  </main>
+</div>
+<dialog id="modal"><form id="modalForm"><div class="modal-top"><h2 id="modalTitle"></h2><button type="button" id="modalClose" class="icon-button" aria-label="关闭"><svg><use href="#i-close"/></svg></button></div><p id="modalDescription" class="subtle"></p><div id="modalFields"></div><div class="modal-actions"><button type="button" id="modalCancel" class="button ghost">取消</button><button type="submit" class="button primary">确认</button></div></form></dialog>
+<input id="importFile" type="file" accept=".json,application/json" hidden>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<noscript>此工作台需要启用 JavaScript。</noscript>
+</body>
+</html>

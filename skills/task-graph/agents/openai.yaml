@@ -1,0 +1,3 @@
+interface:
+  display_name: "Task Graph"
+  short_description: "通过任务拓扑看板规划、推进和恢复项目，维护节点文档与真实验收证据"
